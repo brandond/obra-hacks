@@ -91,7 +91,7 @@
                  style="font-size: 14px;"
                  data-bind="text: event.name,
                             attr: { href: '/event/' + event.id,
-                                    title: event.date + ' ' + (event.series && event.series.name) }">
+                                    title: event.date + ' ' + (event.series ? event.series.name : '') }">
                 Name
               </a>
           </nav>
