@@ -1,0 +1,26 @@
+body {
+  padding-top: 4rem;
+}
+
+.site-content {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+span.race-anchor {
+    border-top: 4rem solid transparent;
+    margin-top: -4rem;
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+    pointer-events: none;
+}
+
+small.rank {
+  display: block;
+  margin-top: -0.6rem;
+}

@@ -1,0 +1,59 @@
+uwsgi:
+  master: True
+  need-app: True
+  show-config: True
+  auto-procname: True
+  log-zero: True
+  log-4xx: True
+  log-5xx: True
+  log-sendfile: True
+  log-ioerror: True
+  log-x-forwarded-for: True
+  cache2: name=default,items=4096,bitmap=1
+  cache2: name=paths,items=32
+  need-plugins: http,router_static,python3
+  single-interpreter: True
+  enable-threads: True
+  processes: %k
+  http-processes: %k
+  thunder-lock: True
+  chdir: /app
+  virtualenv: /app/venv
+  route: ^/$ goto:index
+  route: ^/notifications goto:index
+  route: ^/upgrades goto:index
+  route: ^/person goto:index
+  route: ^/search goto:index
+  route: ^/event goto:index
+  route: ^/ranks goto:index
+  route: ^/api/ goto:api
+  route: .* last:
+  route-label: index
+  route: .* addheader:Link: </css/index.css>; rel=preload; as=style
+  route: .* addheader:Link: </js/index.js>; rel=preload; as=script
+  route: .* addheader:Link: </js/serviceworker.js>; rel=preload; as=serviceworker
+  route: .* addheader:Link: </json/manifest.json>; rel=preload; as=manifest
+  route: .* static:/app/static/index.html
+  route: .* last:
+  route-label: api
+  route: .* addheader:Access-Control-Allow-Origin: *
+  route: .* last:
+  check-static: /app/static
+  static-cache-paths: 900
+  static-cache-paths-name: paths
+  import: logconfig.py
+  import: tasks.py
+  worker-mount: /=obra-hacks:application
+  spooler: /tmp/spool
+  spooler-quiet: True
+  spooler-processes: 1
+  static-gzip-all: True
+  http-keepalive: True
+  http-auto-gzip: True
+  http-websockets: True
+  http-chunked-input: True
+  https2: addr=0.0.0.0:8443,cert=$(UWSGI_CERT),key=$(UWSGI_KEY),spdy=1
+  http: 0.0.0.0:8080
+  stats: 0.0.0.0:8081
+  stats-http: True
+

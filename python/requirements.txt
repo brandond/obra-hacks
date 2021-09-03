@@ -1,0 +1,10 @@
+apsw >= 3.36.0
+click
+flask
+flask_caching
+flask_restx
+lxml
+peewee >= 3.7.0
+requests
+ujson >= 4.1.0
+uwsgidecorators

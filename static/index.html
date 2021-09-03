@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" integrity="sha256-+N4/V/SbAFiW1MPBCXnfnP9QSN3+Keu+NlB+0ev/YKQ=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha256-YLGeXaapI0/5IgZopewRJcFXomhRMlYYjugPLSyNjTY=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/sandstone/bootstrap.min.css" integrity="sha256-qgpZ1V8XkWmm9APL5rLtRW+Tyhp+0TPKJm4JMprrSOw=" crossorigin="anonymous" />
+    <link href="/css/index.css" rel="stylesheet">
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="152x152" href="/images/obra.png">
+ 
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-title" content="OBRA Hacks">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" href="/images/obra.png">
+
+    <!-- Web app manifest, even though we're not a real PWA -->
+    <link rel="manifest" href="/json/manifest.json">
+
+    <title>OBRA Hacks</title>
+  </head>
+  <body id="top">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="/">OBRA Hacks</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-main" aria-controls="nav-main" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="nav-main">
+        <ul class="navbar-nav mr-auto" data-bind="if: pageTemplate">
+          <li class="nav-item" data-bind="css: {active: pageTemplate().startsWith('event') }">
+            <a class="nav-link" href="/events">Results</a>
+          </li>
+          <li class="nav-item" data-bind="css: {active: pageTemplate() == 'upgrades' }">
+            <a class="nav-link" href="/upgrades/pending">Upgrades</a>
+          </li>
+          <li class="nav-item" data-bind="css: {active: pageTemplate() == 'ranks' }">
+            <a class="nav-link" href="/ranks">Ranks</a>
+          </li>
+          <li class="nav-item" data-bind="css: {active: pageTemplate() == 'notifications' }">
+            <a class="nav-link" href="/notifications">Notifications</a>
+          </li>
+        </ul>
+        <form class="form-inline my-2 my-md-0" action="/search" method="get" data-bind="submit: searchSubmit">
+          <input class="form-control mr-sm-2" type="text" autocomplete="off" minlength=3 placeholder="Name" aria-label="Search" name="name">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+    </nav>
+
+    <main role="main" data-bind="if: pageTemplate()">
+      <div class="site-content p-0 container"
+           data-bind="template: { name: pageTemplate }"></div>
+    </main>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.15.0/umd/popper-utils.min.js" integrity="sha256-Im2+AKXyLBUePRXWElaAnuc37n6egsaypNiAZNMV1t8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js" integrity="sha256-fzFFyH01cBVPYzl16KT40wqjhgPtq6FFUB6ckN2+GGw=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js" integrity="sha256-Tjl7WVgF1hgGMgUKZZfzmxOrtoSf8qltZ9wMujjGNQk=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/2.3.2/moment-duration-format.min.js" integrity="sha256-M2KULKSJyw+G0068JiMlM9GX4XpLdUButSzBqntKDZM=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/page.js/1.11.5/page.min.js" integrity="sha256-jsTfILjWtwmc5CQkK79KFmJs7NPBHUyliEenUdC5k+c=" crossorigin="anonymous"></script>
+    <script src="/js/index.js"></script>
+
+    <!-- content templates -->
+    <script type="text/html" id="index">
+      <div class="col-md-10 mx-auto">
+        <div class="card bg-light py-1 mb-2">
+          <h5 class="card-title">New Hotness</h5>
+          <p class="mb-0 bg-white">
+            Extra stuff to improve your post-race experience.
+            <span class="d-none d-sm-inline"><br></span>
+            Result notifications, upgrade points, race rankings, etc.
+          </p>
+        </div>
+
+        <div class="card bg-light py-1 mb-2" id="recent">
+          <h5 class="card-title"><a href="/events">Recent Events</a></h5>
+          <nav class="nav flex-column bg-secondary nav-pills" data-bind="foreach: { data: eventsRecent, as: 'event' }">
+              <a class="nav-link text-light py-0"
+                 style="font-size: 14px;"
+                 data-bind="text: event.name,
+                            attr: { href: '/event/' + event.id,
+                                    title: event.date + ' ' + (event.series && event.series.name) }">
+                Name
+              </a>
+          </nav>
+        </div>
+
+        <div class="card bg-light py-1 mb-2" id="sandbaggers" data-bind="visible: upgradesPending().length">
+          <h5 class="card-title"><a href="/upgrades/pending">Needs to Upgrade</a></h5>
+          <div class="container bg-secondary mb-2">
+            <table class="table table-sm text-left mb-0">
+              <tbody data-bind="foreach: { data: upgradesPending, as: 'result' }">
+                <tr class="row">
+                  <td class="col-4 col-sm-3">
+                    <a class="text-light stretched-link" data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a>
+                  </td>
+                  <td class="col-5 col-sm-5 text-light" data-bind="text: result.sum_value + ' Points'">Points</td>
+                  <td class="col-3 col-sm-2 text-light" data-bind="text: Math.min(...result.sum_categories) + ' -> ' + (Math.min(...result.sum_categories) - 1)">Category</td>
+                  <td class="      col-sm-2 d-none d-sm-table-cell text-light" data-bind="text: result.race.event.discipline.display">Discipline</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card bg-light py-1 mb-2" id="candigrams" data-bind="visible: upgradesRecent().length">
+          <h5 class="card-title"><a href="/upgrades/recent">Recently Upgraded/Downgraded</a></h5>
+          <div class="container bg-secondary mb-2">
+            <table class="table table-sm text-left mb-0">
+              <tbody data-bind="foreach: { data: upgradesRecent, as: 'result' }">
+                <tr class="row">
+                  <td class="col-4 col-sm-3">
+                    <a class="text-light stretched-link" data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a>
+                  </td>
+                  <td class="col-5 col-sm-5 text-light" data-bind="text: result.notes.split(';')[0]">Notes</td>
+                  <td class="col-3 col-sm-2 text-light text-nowrap" data-bind="text: result.race.date">Date</td>
+                  <td class="      col-sm-2 d-none d-sm-table-cell text-light" data-bind="text: result.race.event.discipline.display">Discipline</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      <div class="spinner-border" role="status" data-bind="hidden: eventsRecent() && upgradesRecent().length"><span class="sr-only">Loading...</span></div>
+
+      </div>
+    </script>
+
+    <script type="text/html" id="search">
+      <div class="col-md-10 mx-auto">
+        <div class="card bg-light mb-2">
+          <h5 class="card-title">Search</h5>
+          <div class="container bg-white mb-2">
+            <div class="alert-warning" data-bind="hidden: searchResults().length">
+              No Matching OBRA Members</td>
+            </div>
+            <table class="table table-sm text-left mb-0" data-bind="visible: searchResults().length">
+              <thead>
+                <tr class="row">
+                  <th class="col">Name</th>
+                  <th class="col">Team</th>
+                </tr>
+              </thead>
+              <tbody data-bind="foreach: { data: searchResults, as: 'person' }">
+                <tr class="row">
+                  <td class="col">
+                   <a data-bind="attr: { href: '/person/' + person.id }, text: person.name">Name</a></td>
+                  <td data-bind="text: person.team_name"
+                      class="col">Team</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/html" id="event">
+      <div class="spinner-border" role="status" data-bind="hidden: eventResults()"><span class="sr-only">Loading...</span></div>
+      <div data-bind="with: eventResults, as: 'event'">
+        <h2><a data-bind="text: event.name, attr: { href: 'https://obra.org/events/' + event.id, title: 'View on OBRA.org' }">Event Name</a></h2>
+
+        <div class="col-sm-12 col-md-10 col-lg-8 mx-auto">
+          <div class="card mb-2">
+            <div class="container small">
+            <span data-bind="text: event.races[0].date">Date</span>
+            <span data-bind="text: event.series && ' | Part of the ' + event.series.name">Series</span>
+            </div>
+          </div>
+
+          <ul class="nav nav-pills nav-light" data-bind="foreach: { data: event.races, as: 'race' }">
+            <li class="nav-item">
+              <a class="nav-link px-2 py-0 mx-auto"
+                 data-bind="text: race.name,
+                            attr: { href: '#race_' + race.id }">
+                Race Name
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div data-bind="foreach: { data: event.races, as: 'race' }, childrenComplete: scrollToHash">
+          <div class="card bg-light mb-2">
+            <span class="race-anchor" data-bind="attr: { id: 'race_' + race.id }"></span>
+            <h5 class="card-title mb-1">
+              <a data-bind="text: race.name, attr: { href: 'https://obra.org/events/' + event.id + '#race_' + race.id, title: 'View on OBRA.org' }">Race Name</a>
+            </h5>
+            <div data-bind="text: race.quality > 0 && 'Race Quality: ' + race.quality || '' "></div>
+            <div class="container bg-white mb-2">
+              <table class="table table-sm text-left mb-0">
+                <thead>
+                  <tr class="row">
+                    <th class="col-1 col-sm-1 col-md-1 col-lg-1">#</th>
+                    <th class="col-2 col-sm-1 col-md-1 col-lg-1 text-nowrap">Points</th>
+                    <th class="                        col-lg-1 d-none d-lg-table-cell">Rank Pts</th>
+                    <th class="col-5 col-sm-3 col-md-3 col-lg-2">Name</th>
+                    <th class="      col-sm-4 col-md-5 col-lg-3 d-none d-sm-table-cell">Team</th>
+                    <th class="col-2 col-sm-1 col-md-1 col-lg-1">Laps</th>
+                    <th class="col-2 col-sm-2 col-md-1 col-lg-1">Time</th>
+                    <th class="                        col-lg-2 d-none d-lg-table-cell">Notes</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: { data: race.results, as: 'result' }">
+                  <tr class="row">
+                    <td data-bind="text: result.place"
+                        class="col-1 col-sm-1 col-md-1 col-lg-1 text-nowrap">#</td>
+                    <td data-bind="text: result.value || ''"
+                        class="col-2 col-sm-1 col-md-1 col-lg-1">Points</td>
+                    <td data-bind="text: result.rank"
+                        class="                        col-lg-1 d-none d-lg-table-cell">Rank Pts</td>
+                    <td class="col-5 col-sm-3 col-md-3 col-lg-2">
+                     <a data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a></td>
+                    <td data-bind="text: result.person.team_name"
+                        class="      col-sm-4 col-md-5 col-lg-3 d-none d-sm-table-cell">Team</td>
+                    <td data-bind="text: result.laps"
+                        class="col-2 col-sm-1 col-md-1 col-lg-1">Laps</td>
+                    <td data-bind="text: result.time > 0 && moment.duration(result.time * 1000).format('h:mm:ss') || '-'"
+                        class="col-2 col-sm-2 col-md-1 col-lg-1 text-nowrap">Time</td>
+                    <td data-bind="text: result.notes"
+                        class="                        col-lg-2 d-none d-lg-table-cell">Notes</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <nav class="nav flex-column bg-dark fixed-bottom">
+          <a class="nav-link py-0" href="#top">^</a>
+        </nav>
+      </div>
+    </script>
+
+    <script type="text/html" id="notifications">
+      <div class="col-md-10 mx-auto">
+        <div class="card bg-light">
+          <h5 class="card-title">Notifications</h5>
+          <div class="container bg-white">
+            <p>Get a push notification on your mobile device when new race results are available.</p>
+            <p><em>Coming Soon!</em></p>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/html" id="ranks">
+      <div class="container bg-white mb-2 col-sm-12 col-md-10 col-lg-8 mx-auto">
+        <div class="card mb-2">
+          <div class="container small">
+            Points are granted for the last year of racing, not counting the 2020 season.
+            <span class="d-inline d-md-none"><br></span>
+            Only categorized and singlespeed races are considered.
+            <span class="d-inline d-md-none"><br></span>
+            Open age-graded fields <strong>are not</strong> included.
+          </div>
+        </div>
+
+        <div class="spinner-border" role="status" data-bind="hidden: ranksResults().length"><span class="sr-only">Loading...</span></div>
+
+        <div data-bind="visible: ranksResults().length">
+          <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+              data-bind="foreach: { data: ranksResults, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, ranksResults())">
+            <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+              <a class="nav-link" data-togle="tab" role="tab"
+                 data-bind="click: $root.changeActivePanel.bind($root),
+                            text: discipline.display,
+                            css: { active: discipline.name === $root.activePanel(), disabled: discipline.ranks.length == 0 },
+                            attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">
+                Discipline
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content" id="discipline-tab-content"
+               data-bind="foreach: { data: ranksResults, as: 'discipline' }">
+            <div class="card bg-light tab-pane fade border-top-0" role="tabpanel"
+                 data-bind="attr: { 'id': discipline.name },
+                            css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+              <div class="container bg-white">
+                <table class="table table-sm text-left">
+                  <thead>
+                    <tr class="row">
+                      <th class="col-2 col-sm-1 border-top-0">#</th>
+                      <th class="col-3 col-sm-2 border-top-0 text-nowrap">Rank Pts</th>
+                      <th class="col-7 col-sm-3 border-top-0 ">Name</th>
+                      <th class="      col-sm-6 border-top-0 d-none d-sm-block">Team</th>
+                    </tr>
+                  </thead>
+                  <tbody data-bind="foreach: { data: discipline.ranks, as: 'person' }">
+                    <tr class="row">
+                      <td class="col-2 col-sm-1" data-bind="text: person.place">#</td>
+                      <td class="col-3 col-sm-2 text-nowrap" data-bind="text: person.rank">Rank Pts</td>
+                      <td class="col-7 col-sm-3">
+                        <a data-bind="text: person.name, attr: { href: '/person/' + id + '#' + discipline.name}">Name</a>
+                      </td>
+                      <td class="      col-sm-6 d-none d-sm-block" data-bind="text: person.team_name">Team</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/html" id="events">
+      <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+          data-bind="foreach: { data: eventsYears, as: 'year' }">
+        <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 4 }">
+          <a class="nav-link" data-togle="tab" role="tab"
+             data-bind="text: year,
+                        css: { active: $root.pageContext().params.year == year },
+                        attr: { href: '/events/' + year }">Year</a>
+        </li>
+      </ul>
+
+      <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+          data-bind="foreach: { data: yearEvents, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, yearEvents())">
+        <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+          <a class="nav-link" data-togle="tab" role="tab"
+             data-bind="text: discipline.display,
+                        click: $root.changeActivePanel.bind($root),
+                        css: { active: discipline.name === $root.activePanel(), disabled: discipline.events.length == 0 },
+                        attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
+        </li>
+      </ul>
+
+      <div class="spinner-border" role="status" data-bind="hidden: eventsYears() && yearEvents()"><span class="sr-only">Loading...</span></div>
+      
+      <div class="tab-content" id="discipline-tab-content"
+           data-bind="foreach: { data: yearEvents, as: 'discipline' }">
+        <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
+             data-bind="attr: { 'id': discipline.name },
+                        css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+          <div class="container bg-white mb-2">
+            <table class="table table-sm text-left">
+              <thead>
+                <tr class="row">
+                  <th class="col-9 col-sm-5 border-top-0">Name</th>
+                  <th class="col-3 col-sm-2 border-top-0 text-nowrap">Date</th>
+                  <th class="col-0 col-sm-5 border-top-0 d-none d-sm-table-cell">Series</th>
+                </tr>
+              </thead>
+              <tbody data-bind="foreach: { data: events, as: 'event' }">
+                <tr class="row">
+                  <td class="col-9 col-sm-5"><a data-bind="attr: { href: '/event/' + event.id }, text: event.name">Name</a></td>
+                  <td class="col-3 col-sm-2 text-nowrap"data-bind="text: event.date">Date</td>
+                  <td class="col-0 col-sm-5 d-none d-sm-table-cell"data-bind="text: event.series && event.series.name"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/html" id="person">
+      <div class="spinner-border" role="status" data-bind="hidden: personResults()"><span class="sr-only">Loading...</span></div>
+
+      <div data-bind="with: personResults, as: 'person'">
+        <h2><a data-bind="text: 'Results for ' + person.name, attr: { href: 'https://obra.org/people/' + person.id, title: 'View on OBRA.org'}">Results for Name</a></h2>
+
+        <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+            data-bind="foreach: { data: person.disciplines, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, person.disciplines)">
+          <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+            <a class="nav-link" data-togle="tab" role="tab"
+               data-bind="click: $root.changeActivePanel.bind($root),
+                          css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
+                          attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">
+              <div data-bind="text: discipline.display">
+                Discipline
+              </div>
+              <small class="text-muted rank" data-bind="text: discipline.rank">Rank</small>
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="discipline-tab-content"
+             data-bind="foreach: { data: person.disciplines, as: 'discipline' }">
+          <div class="card bg-light tab-pane fade border-top-0" role="tabpanel"
+               data-bind="attr: { 'id': discipline.name },
+                          css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+            <div class="container bg-white">
+              <table class="table table-sm text-left">
+                <thead>
+                  <tr class="row">
+                    <th class="col-2 col-sm-1 col-md-1 col-lg-1 border-top-0">#</th>
+                    <th class="      col-sm-1 col-md-1 col-lg-1 border-top-0 d-sm-table-cell d-none text-nowrap">Points</th>
+                    <th class="col-2 col-sm-1 col-md-1 col-lg-1 border-top-0">Total Pts</th>
+                    <th class="                        col-lg-1 border-top-0 d-lg-table-cell d-none">Rank Pts</th>
+                    <th class="col-4 col-sm-4 col-md-3 col-lg-2 border-top-0">Event</th>
+                    <th class="col-4 col-sm-3 col-md-3 col-lg-2 border-top-0 ">Race</th>
+                    <th class="               col-md-1 col-lg-1 border-top-0 d-md-table-cell d-none text-nowrap">Category</th>
+                    <th class="      col-sm-2 col-md-2 col-lg-1 border-top-0 d-sm-table-cell d-none">Date</th>
+                    <th class="                        col-lg-2 border-top-0 d-lg-table-cell d-none">Notes</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
+                  <tr class="row">
+                    <td data-bind="text: result.place + '/' + result.race.starters"
+                        class="col-2 col-sm-1 col-md-1 col-lg-1 text-nowrap">#</td>
+                    <td data-bind="text: result.value || ''"
+                        class="      col-sm-1 col-md-1 col-lg-1 d-sm-table-cell d-none">Points</td>
+                    <td data-bind="text: result.sum_value || ''"
+                        class="col-2 col-sm-1 col-md-1 col-lg-1">Total Pts</td>
+                    <td data-bind="text: result.rank || ''"
+                        class="                        col-lg-1 d-lg-table-cell d-none">Rank Pts</td>
+                    <td class="col-4 col-sm-4 col-md-3 col-lg-2">
+                    <a data-bind="text: result.race.event.name, attr: { href: '/event/'+ result.race.event.id + '#race_' + result.race.id }"
+                        >Event</a></td>
+                    <td data-bind="text: result.race.name"
+                        class="col-4 col-sm-3 col-md-3 col-lg-2">Race</td>
+                    <td data-bind="text: result.sum_categories.join('/')"
+                        class="               col-md-1 col-lg-1 d-md-table-cell d-none">Category</td>
+                    <td data-bind="text: result.race.date"
+                        class="      col-sm-2 col-md-2 col-lg-1 d-sm-table-cell d-none text-nowrap">Date</td>
+                    <td data-bind="text: result.notes"
+                        class="                        col-lg-2 d-lg-table-cell d-none">Notes</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/html" id="upgrades">
+      <div class="col-sm-12 col-md-10 col-lg-8 mx-auto">
+        <div class="card mb-2">
+          <div class="container small">
+            Upgrades remain pending until confirmed by racing in a more skilled category.
+          </div>
+        </div>
+
+        <ul class="nav nav-tabs justify-content-center" id="type-tabs" role="tablist"
+            data-bind="foreach: { data: ['pending', 'recent'], as: 'type' }">
+          <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 4 }">
+            <a class="nav-link" data-togle="tab" role="tab"
+               data-bind="text: type,
+                          css: { active: $root.pageContext().params.type == type },
+                          attr: { href: '/upgrades/' + type }">Type</a>
+          </li>
+        </ul>
+
+        <div class="container bg-white mb-2" data-bind="if: $root.pageContext().params.type">
+          <div data-bind="template: {name: 'upgrades_' + $root.pageContext().params.type }"></div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/html" id="upgrades_pending">
+      <div class="spinner-border" role="status" data-bind="hidden: upgradesPendingResults()"><span class="sr-only">Loading...</span></div>
+      
+      <div data-bind="with: upgradesPendingResults, as: 'upgrades'">
+        <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+            data-bind="foreach: { data: upgrades, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, upgrades)">
+          <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+            <a class="nav-link" data-togle="tab" role="tab"
+               data-bind="text: discipline.display,
+                          click: $root.changeActivePanel.bind($root),
+                          css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
+                          attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="discipline-tab-content"
+             data-bind="foreach: { data: upgrades, as: 'discipline' }">
+          <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
+               data-bind="attr: { 'id': discipline.name },
+                          css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+            <div class="container bg-white mb-2"> 
+              <table class="table table-sm text-left">
+                <thead>
+                  <tr class="row">
+                    <th class="col-4 border-top-0">Name</th>
+                    <th class="col-2 border-top-0">Total Pts</th>
+                    <th class="col-2 border-top-0 text-truncate">Category</th>
+                    <th class="col-4 border-top-0">Date Granted</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
+                  <tr class="row">
+                    <td class="col-4">
+                     <a data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a></td>
+                    <td data-bind="text: result.sum_value"
+                        class="col-2">Total Pts</td>
+                    <td data-bind="text: Math.min(...result.sum_categories) + ' -> ' + (Math.min(...result.sum_categories) - 1)"
+                        class="col-2">Category</td>
+                    <td data-bind="text: result.pending_date"
+                        class="col-4">Date Granted</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>  
+        </div>
+      </div>
+
+    </script>
+
+    <script type="text/html" id="upgrades_recent">
+      <div class="spinner-border" role="status" data-bind="hidden: upgradesRecentResults()"><span class="sr-only">Loading...</span></div>
+
+      <div data-bind="with: upgradesRecentResults, as: 'upgrades'">
+        <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+            data-bind="foreach: { data: upgrades, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, upgrades)">
+          <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+            <a class="nav-link" data-togle="tab" role="tab"
+               data-bind="text: discipline.display,
+                          click: $root.changeActivePanel.bind($root),
+                          css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
+                          attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="discipline-tab-content"
+             data-bind="foreach: { data: upgrades, as: 'discipline' }">
+          <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
+               data-bind="attr: { 'id': discipline.name },
+                          css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+            <div class="container bg-white mb-2"> 
+              <table class="table table-sm text-left">
+                <thead>
+                  <tr class="row">
+                    <th class="col-4 border-top-0">Name</th>
+                    <th class="col-5 border-top-0">Notes</th>
+                    <th class="col-3 border-top-0">Date</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
+                  <tr class="row">
+                    <td class="col-4">
+                     <a data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a></td>
+                    <td data-bind="text: result.notes.split(';')[0]"
+                        class="col-5">Notes</td>
+                    <td data-bind="text: result.race.date"
+                        class="col-3">Date</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>  
+        </div>
+      </div>
+    </script>
+
+  </body>
+</html>
