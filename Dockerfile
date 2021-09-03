@@ -49,15 +49,13 @@ COPY --chown=405:100 ./conf/ /app/conf/
 
 
 FROM alpine
+RUN apk --no-cache upgrade && apk --no-cache add libxml2 libxslt python3 bash libstdc++ openssl uwsgi-http uwsgi-python3 uwsgi-router_static
+COPY --from=build-collect / /
 LABEL maintainer="Brad Davidson <brad@oatmail.org>"
-RUN apk --no-cache upgrade
-RUN apk --no-cache add libxml2 libxslt python3 bash libstdc++ openssl uwsgi-http uwsgi-python3 uwsgi-router_static
 VOLUME ["/tmp"] 
 VOLUME ["/data"]
-WORKDIR /app
 USER guest
 ENV UWSGI_CERT=/tmp/tls/server.pem UWSGI_KEY=/tmp/tls/server.key CACHE_TYPE=uwsgi HOME=/data
 EXPOSE 8080 8443
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["uwsgi", "--yaml", "/app/conf/uwsgi.yaml"]
-COPY --from=build-collect / /
