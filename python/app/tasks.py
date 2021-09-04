@@ -12,7 +12,7 @@ logger.info('{} imported'.format(__name__))
 full_scrape_done = False
 
 
-@rbtimer(60, target='spooler')
+@rbtimer(600, target='spooler')
 def scrape_events(num):
     # Most of this is cribbed from obra_hacks.backend.commands
     if 'NO_SCRAPE' in os.environ:
