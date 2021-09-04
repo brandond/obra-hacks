@@ -108,12 +108,16 @@ def register(api, cache):
     @ns.response(500, 'Server Error')
     class UpgradesPending(Resource):
         """
-        Get pending upgrades, grouped by discipline, sorted by category and points
+        Get the most recent result for each person, if that person needed an upgrade as of that event,
+        grouped by discipline, sorted by category and points
         """
         @cache.cached(timeout=cache_timeout)
         def get(self):
-            cur_year = date.today().year
-            start_date = date(cur_year - 1, 1, 1)
+            # limit results to people who raced since jan 1 of the previous year
+            start_year = date.today().year - 1
+            if start_year == 2020:
+                start_year = 2019  # f*ck 2020
+            start_date = date(start_year, 1, 1)
             disciplines = []
 
             for upgrade_discipline in DISCIPLINE_MAP.keys():
@@ -174,12 +178,15 @@ def register(api, cache):
     @ns.response(500, 'Server Error')
     class UpgradesPendingTop(Resource):
         """
-        Get the top pending upgrades, sorted by category and points
+        Get the most recent 6 pending upgrade results, sorted by category and points
         """
         @cache.cached(timeout=cache_timeout)
         def get(self):
-            cur_year = date.today().year
-            start_date = date(cur_year - 1, 1, 1)
+            # limit results to people who raced since jan 1 of the previous year
+            start_year = date.today().year - 1
+            if start_year == 2020:
+                start_year = 2019  # f*ck 2020
+            start_date = date(start_year, 1, 1)
 
             # Subquery to find the most recent result for each person
             latest_cte = (Result.select()
@@ -230,12 +237,15 @@ def register(api, cache):
     @ns.response(500, 'Server Error')
     class UpgradesRecent(Resource):
         """
-        Get historical upgrades, grouped by discipline, sorted by date, category, name
+        Get all results where the person upgraded or downgraded, grouped by discipline, sorted by date, category, name
         """
         @cache.cached(timeout=cache_timeout)
         def get(self):
-            cur_year = date.today().year
-            start_date = date(cur_year - 1, 1, 1)
+            # limit results to people who raced since jan 1 of the previous year
+            start_year = date.today().year - 1
+            if start_year == 2020:
+                start_year = 2019  # f*ck 2020
+            start_date = date(start_year, 1, 1)
             disciplines = []
 
             for upgrade_discipline in DISCIPLINE_MAP.keys():
@@ -282,12 +292,15 @@ def register(api, cache):
     @ns.response(500, 'Server Error')
     class UpgradesRecentTop(Resource):
         """
-        Get recent historical upgrades, sorted by date, category, name
+        Get the most recent 6 results where the person upgraded or downgraded, sorted by date, category, name
         """
         @cache.cached(timeout=cache_timeout)
         def get(self):
-            cur_year = date.today().year
-            start_date = date(cur_year - 1, 1, 1)
+            # limit results to people who raced since jan 1 of the previous year
+            start_year = date.today().year - 1
+            if start_year == 2020:
+                start_year = 2019  # f*ck 2020
+            start_date = date(start_year, 1, 1)
 
             query = (Result.select(Result,
                                    Race,
@@ -314,5 +327,75 @@ def register(api, cache):
                            .limit(6))
 
             return ([marshal(r, result_with_person_and_race_with_event) for r in query.prefetch(Race, Event, Series, Person, Points, Rank, Quality)],
+                    200,
+                    {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
+
+    @ns.route('/all/')
+    @ns.response(200, 'Success', [discipline_results])
+    @ns.response(500, 'Server Error')
+    class UpgradesAll(Resource):
+        """
+        Get the most recent result for each person, if that person had upgrade points as of that event,
+        grouped by discipline, sorted by points and category
+        """
+        @cache.cached(timeout=cache_timeout)
+        def get(self):
+            # limit results to people who raced since jan 1 of the previous year
+            start_year = date.today().year - 1
+            if start_year == 2020:
+                start_year = 2019  # f*ck 2020
+            start_date = date(start_year, 1, 1)
+            disciplines = []
+
+            for upgrade_discipline in DISCIPLINE_MAP.keys():
+                # Subquery to find the most recent result for each person
+                latest_cte = (Result.select()
+                                    .join(Race, src=Result)
+                                    .join(Event, src=Race)
+                                    .join(Person, src=Result)
+                                    .where(Race.date >= start_date)
+                                    .where(Race.categories.length() > 0)
+                                    .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
+                                    .select(fn.DISTINCT(fn.FIRST_VALUE(Result.id)
+                                                          .over(partition_by=[Result.person_id],
+                                                                order_by=[Race.date.desc(), Race.created.desc()],
+                                                                start=Window.preceding()
+                                                                )
+                                                        ).alias('result_id'))
+                                    .cte('latest_results'))
+
+                latest_results = Select(
+                    from_list=[fn.JSON_EACH(latest_cte.select_from(fn.JSON_GROUP_ARRAY(latest_cte.c.result_id).python_value(str)).scalar())],
+                    columns=[Entity('value')])
+
+                query = (Result.select(Result,
+                                       Race,
+                                       Event,
+                                       Person,
+                                       Points,
+                                       PendingUpgrade,
+                                       ObraPersonSnapshot,
+                                       Rank,
+                                       Quality)
+                               .join(Race, src=Result)
+                               .join(Event, src=Race)
+                               .join(Person, src=Result)
+                               .join(Points, src=Result)
+                               .join(PendingUpgrade, src=Result, join_type=JOIN.LEFT_OUTER)
+                               .join(ObraPersonSnapshot, src=PendingUpgrade, join_type=JOIN.LEFT_OUTER)
+                               .join(Rank, src=Result, join_type=JOIN.LEFT_OUTER)
+                               .join(Quality, src=Race, join_type=JOIN.LEFT_OUTER)
+                               .where(Result.id << latest_results)
+                               .where(Points.value > 0)
+                               .order_by(Points.sum_value.desc(),
+                                         Points.sum_categories.asc()))
+
+                disciplines.append({'name': upgrade_discipline,
+                                    'display': upgrade_discipline.split('_')[0].title(),
+                                    'results': query.prefetch(Race, Event, Person,
+                                                              Points, PendingUpgrade, ObraPersonSnapshot, Rank, Quality),
+                                    })
+
+            return ([marshal(d, discipline_results) for d in disciplines],
                     200,
                     {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})

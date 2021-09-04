@@ -11,6 +11,7 @@ var pageViewModel = {
   // Specific data loaded from API to build template content
   upgradesPendingResults: ko.observable(),
   upgradesRecentResults: ko.observable(),
+  upgradesAllResults: ko.observable(),
   searchResults: ko.observableArray(),
   personResults: ko.observable(),
   eventResults: ko.observable(),
@@ -123,7 +124,12 @@ function doUpgrades(context, next){
     $.get('/api/v1/upgrades/recent/', function(results){
       pageViewModel.upgradesRecentResults(results);
     });
+  } else if (context.params.type == 'all'){
+    $.get('/api/v1/upgrades/all/', function(results){
+      pageViewModel.upgradesAllResults(results);
+    });
   }
+
   document.title = baseTitle + ': Upgrades';
   next();
 }

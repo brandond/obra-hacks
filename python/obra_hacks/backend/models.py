@@ -110,6 +110,8 @@ class ObraPersonSnapshot(ObraModel):
         )
 
     def category_for_discipline(self, discipline):
+        if not self.license:
+            return None
         discipline = discipline.replace('mountain_bike', 'mtb')
         discipline = discipline.replace('short_track', 'mtb')
         discipline = discipline.replace('cyclocross', 'ccx')

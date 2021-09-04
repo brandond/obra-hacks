@@ -335,8 +335,9 @@ def clean_events(year, upgrade_discipline):
             logger.info('Ignoring Event: [{}]{} on {}/{}'.format(event.id, event.name, event.year, event.date))
             event.ignore = True
             event.save()
-            Result.delete().where(Result.race_id << (Race.select(Race.id).where(Race.event_id == event.id))).execute()
-            race_count += Race.delete().where(Race.event_id == event.id).execute()
+            for race in event.races.select(Race.id):
+                race.delete_instance(recursive=True)
+                race_count += 1
 
     return race_count
 

@@ -180,8 +180,8 @@ def sum_points(upgrade_discipline):
                 # If the race category includes their upgrade category, and they needed an upgrade as of the previous result
                 obra_category = get_obra_data(result.person, result.race.date).category_for_discipline(result.race.event.discipline)
                 logger.debug('OBRA category check: obra={}, upgrade_category={}'.format(obra_category, upgrade_category))
-                if obra_category <= upgrade_category:
-                    # If they've been upgraded on the site, give them the upgrade.
+                if obra_category is None or obra_category <= upgrade_category:
+                    # If they're not a member or have been upgraded on the site, give them the upgrade.
                     # The actual upgrade probably happened much later, but we have no idea when so this is the best we can do.
                     upgrade_notes.append('UPGRADED TO {} WITH {} POINTS'.format(upgrade_category, points_sum()))
                     cat_points[:] = []
@@ -192,8 +192,9 @@ def sum_points(upgrade_discipline):
                 # Race category does not overlap with rider category, and the race cateogory is more skilled
                 if categories == {9}:
                     # First result for this rider, assign rider current race category - which may be multiple, such as 1/2 or 3/4
-                    if result.race.categories in ([1], [1, 2], [1, 2, 3]):
+                    if result.race.categories in ([1], [1, 2], [1, 2, 3], [3, 4, 5]):
                         # If we first saw them racing as a pro they've probably been there for a while.
+                        # if we first saw them racing as a junior, they might still be there.
                         # Just check the site and assign their category from that.
                         obra_category = get_obra_data(result.person, result.race.date).category_for_discipline(result.race.event.discipline)
                         logger.debug('OBRA category check: obra={}, race={}'.format(obra_category, result.race.categories))
@@ -218,11 +219,15 @@ def sum_points(upgrade_discipline):
                     upgrade_race = result.race
             elif (not categories.intersection(result.race.categories) and
                   max(categories) < max(result.race.categories)):
+                # points expire after a year, unless the race occurred in 2021, in which case go two years back
+                max_points_age = 365
+                if result.race.date.year == 2021:
+                    max_points_age = 365 * 2  # f*ck 2020
                 # Race category does not overlap with rider category, and the race category is less skilled
                 if is_woman and 'women' not in result.race.name.lower():
                     # Women can race down-category in a men's race
                     pass
-                elif not points_sum() and (result.race.date - upgrade_race.date).days > 365:
+                elif not points_sum() and (result.race.date - upgrade_race.date).days > max_points_age:
                     # All their points expired and it's been a year since they changed categories, probably nobody cares, give them a downgrade
                     cat_points[:] = []
                     upgrade_notes.append('DOWNGRADED TO {}'.format(min(result.race.categories)))
@@ -396,9 +401,9 @@ def print_points(upgrade_discipline, output_format):
         writer.start_upgrades()
         for point in upgrades_needed.execute():
             # Confirm that they haven't already been upgraded on the site
-            obra = get_obra_data(point.result.person, point.result.race.date)
             discipline = point.result.race.event.discipline
-            if obra.category_for_discipline(discipline) >= min(point.sum_categories):
+            obra_category = get_obra_data(point.result.person, point.result.race.date).category_for_discipline(discipline)
+            if obra_category is not None and obra_category >= min(point.sum_categories):
                 writer.upgrade(point)
         writer.end_upgrades()
 
@@ -500,6 +505,7 @@ def get_obra_data(person, date):
     If we have data from some other newer date, use that.
     If we don't have any data at all, get some.
     """
+    # FIXME - seems like we're using stale data here? When do we want to fetch new data?
     if person.obra.where(ObraPersonSnapshot.date <= date).count():
         query = person.obra.order_by(ObraPersonSnapshot.date.desc()).where(ObraPersonSnapshot.date <= date)
     elif person.obra.count():
@@ -528,8 +534,7 @@ def expire_points(points, race_date):
     # points expire after a year, unless the race occurred in 2021, in which case go two years back
     max_points_age = 365
     if race_date.year == 2021:
-        # f*ck 2020
-        max_points_age = 365 * 2
+        max_points_age = 365 * 2  # f*ck 2020
     expired_points = sum(int(p.value) for p in points if (race_date - p.date).days > max_points_age)
     points[:] = [p for p in points if (race_date - p.date).days <= max_points_age]
     return expired_points
@@ -540,6 +545,9 @@ def confirm_category_change(result, notes):
     obra_data = get_obra_data(result.person, result.race.date)
     obra_category = obra_data.category_for_discipline(result.race.event.discipline)
     result_category = min(result.points[0].sum_categories)
+
+    if obra_category is None:
+        return
 
     for i, note in enumerate(notes):
         if 'UPGRADED' in note:

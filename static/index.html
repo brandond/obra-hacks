@@ -15,7 +15,7 @@
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" sizes="152x152" href="/images/obra.png">
- 
+
     <!-- Add to homescreen for Safari on iOS -->
     <meta name="apple-mobile-web-app-title" content="OBRA Hacks">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -338,7 +338,7 @@
       </ul>
 
       <div class="spinner-border" role="status" data-bind="hidden: eventsYears() && yearEvents()"><span class="sr-only">Loading...</span></div>
-      
+
       <div class="tab-content" id="discipline-tab-content"
            data-bind="foreach: { data: yearEvents, as: 'discipline' }">
         <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
@@ -446,7 +446,7 @@
         </div>
 
         <ul class="nav nav-tabs justify-content-center" id="type-tabs" role="tablist"
-            data-bind="foreach: { data: ['pending', 'recent'], as: 'type' }">
+            data-bind="foreach: { data: ['pending', 'recent', 'all'], as: 'type' }">
           <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 4 }">
             <a class="nav-link" data-togle="tab" role="tab"
                data-bind="text: type,
@@ -463,7 +463,7 @@
 
     <script type="text/html" id="upgrades_pending">
       <div class="spinner-border" role="status" data-bind="hidden: upgradesPendingResults()"><span class="sr-only">Loading...</span></div>
-      
+
       <div data-bind="with: upgradesPendingResults, as: 'upgrades'">
         <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
             data-bind="foreach: { data: upgrades, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, upgrades)">
@@ -481,7 +481,7 @@
           <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
                data-bind="attr: { 'id': discipline.name },
                           css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
-            <div class="container bg-white mb-2"> 
+            <div class="container bg-white mb-2">
               <table class="table table-sm text-left">
                 <thead>
                   <tr class="row">
@@ -505,10 +505,55 @@
                 </tbody>
               </table>
             </div>
-          </div>  
+          </div>
         </div>
       </div>
+    </script>
 
+    <script type="text/html" id="upgrades_all">
+      <div class="spinner-border" role="status" data-bind="hidden: upgradesAllResults()"><span class="sr-only">Loading...</span></div>
+
+      <div data-bind="with: upgradesAllResults, as: 'upgrades'">
+        <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+            data-bind="foreach: { data: upgrades, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, upgrades)">
+          <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+            <a class="nav-link" data-togle="tab" role="tab"
+               data-bind="text: discipline.display,
+                          click: $root.changeActivePanel.bind($root),
+                          css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
+                          attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="discipline-tab-content"
+             data-bind="foreach: { data: upgrades, as: 'discipline' }">
+          <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
+               data-bind="attr: { 'id': discipline.name },
+                          css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+            <div class="container bg-white mb-2">
+              <table class="table table-sm text-left">
+                <thead>
+                  <tr class="row">
+                    <th class="col-6 border-top-0">Name</th>
+                    <th class="col-3 border-top-0">Total Pts</th>
+                    <th class="col-3 border-top-0 text-truncate">Category</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
+                  <tr class="row">
+                    <td class="col-6">
+                     <a data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a></td>
+                    <td data-bind="text: result.sum_value"
+                        class="col-3">Total Pts</td>
+                    <td data-bind="text: result.sum_categories.join('/')"
+                        class="col-3">Category</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </script>
 
     <script type="text/html" id="upgrades_recent">
@@ -531,7 +576,7 @@
           <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
                data-bind="attr: { 'id': discipline.name },
                           css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
-            <div class="container bg-white mb-2"> 
+            <div class="container bg-white mb-2">
               <table class="table table-sm text-left">
                 <thead>
                   <tr class="row">
@@ -552,7 +597,7 @@
                 </tbody>
               </table>
             </div>
-          </div>  
+          </div>
         </div>
       </div>
     </script>
