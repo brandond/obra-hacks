@@ -1,6 +1,6 @@
 FROM alpine AS build-base
 RUN apk --no-cache upgrade
-RUN apk --no-cache add alpine-sdk python3 python3-dev libxml2-dev libxslt-dev
+RUN apk --no-cache add alpine-sdk python3 python3-dev libxml2-dev libxslt-dev gzip
 RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --upgrade pip && \
     /app/venv/bin/pip install --upgrade setuptools wheel
@@ -35,17 +35,24 @@ RUN /app/venv/bin/pip install -r /usr/src/obra-hacks/python/requirements.txt
 COPY ./python/ /usr/src/obra-hacks/python/
 RUN /app/venv/bin/pip install --no-deps --use-feature=in-tree-build /usr/src/obra-hacks/python/ && \
     cp -v /usr/src/obra-hacks/python/app/* /app/
-RUN (CACHE_TYPE=SimpleCache timeout 5 /app/venv/bin/python /app/obra-hacks.py & sleep 2 && curl -vs http://127.0.0.1:5000/api/v1/events/years/)
+RUN (CACHE_TYPE=SimpleCache timeout 5 /app/venv/bin/python /app/obra-hacks.py & sleep 2 && curl -vsf --compressed http://127.0.0.1:5000/api/v1/events/years/)
 COPY docker-entrypoint.sh /app/
 RUN mkdir -p /data /tmp/spool /tmp/tls
 
 
+FROM build-base AS build-shasum
+COPY --from=build-static /app/ /app/
+COPY ./conf/ /app/conf/
+RUN export JS_CHECKSUM=$(sha256sum /app/static/js/index.js | awk '{print $1}') && \
+    sed -i "s/index.js/index.js?${JS_CHECKSUM}/" /app/conf/uwsgi.yaml /app/static/index.html && \
+    gzip -kvr /app/static
+
+
 FROM scratch AS build-collect
-COPY --chown=405:100 --from=build-static /app/ /app/
+COPY --chown=405:100 --from=build-shasum /app/ /app/
 COPY --chown=405:100 --from=build-python /app/ /app/
 COPY --chown=405:100 --from=build-python /data/ /data/
 COPY --chown=405:100 --from=build-python /tmp/ /tmp/
-COPY --chown=405:100 ./conf/ /app/conf/
 
 
 FROM alpine

@@ -30,4 +30,5 @@ def create_application():
 application = create_application()
 
 if __name__ == '__main__':
+    logging.basicConfig(level="DEBUG")
     application.run(debug=True)

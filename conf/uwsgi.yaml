@@ -38,7 +38,9 @@ uwsgi:
   route-label: api
   route: .* addheader:Access-Control-Allow-Origin: *
   route: .* last:
+  offload-threads: 2
   check-static: /app/static
+  static-gzip-all: True
   static-cache-paths: 900
   static-cache-paths-name: paths
   import: logconfig.py
@@ -47,9 +49,9 @@ uwsgi:
   spooler: /tmp/spool
   spooler-quiet: True
   spooler-processes: 1
-  static-gzip-all: True
   http-keepalive: True
   http-auto-gzip: True
+  http-auto-chunked: True
   http-websockets: True
   http-chunked-input: True
   https2: addr=0.0.0.0:8443,cert=$(UWSGI_CERT),key=$(UWSGI_KEY),spdy=1
