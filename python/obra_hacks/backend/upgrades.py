@@ -162,6 +162,11 @@ def sum_points(upgrade_discipline):
         def points_sum():
             return sum(int(p.value) for p in cat_points)
 
+        def erase_points():
+            for point in result.points:
+                point.delete_instance(recursive=True)
+            result.points[:] = []
+
         expired_points = expire_points(cat_points, result.race.date)
         if expired_points:
             upgrade_notes.append('{} {} EXPIRED'.format(expired_points, 'POINT HAS' if expired_points == 1 else 'POINTS HAVE'))
@@ -176,7 +181,10 @@ def sum_points(upgrade_discipline):
                 is_woman = True
 
             # Here's the goofy category change logic
-            if   upgrade_category in result.race.categories and needed_upgrade():
+            if categories == {1} and 1 in result.race.categories:
+                # Nowhere to go when you're in cat 1
+                erase_points()
+            elif upgrade_category in result.race.categories and needed_upgrade():
                 # If the race category includes their upgrade category, and they needed an upgrade as of the previous result
                 obra_category = get_obra_data(result.person, result.race.date).category_for_discipline(result.race.event.discipline)
                 logger.debug('OBRA category check: obra={}, upgrade_category={}'.format(obra_category, upgrade_category))
@@ -204,6 +212,8 @@ def sum_points(upgrade_discipline):
                             categories = {max(result.race.categories)}
                     else:
                         categories = set(result.race.categories)
+                    if categories == {1}:
+                        erase_points()
                     # Add a dummy point and note to ensure Points creation
                     upgrade_notes.append('')
                 else:
